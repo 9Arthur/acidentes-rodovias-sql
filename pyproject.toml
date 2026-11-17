@@ -5,7 +5,9 @@ description = "Pipeline de dados de acidentes nas rodovias federais (PRF 2025) c
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "pandas>=3.1.0",
     "psycopg[binary]>=3.3.6",
+    "pyarrow>=26.0.0",
 ]
 
 [build-system]
