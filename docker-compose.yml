@@ -1,0 +1,19 @@
+services:
+  db:
+    image: mirror.gcr.io/library/postgres:17
+    environment:
+      POSTGRES_USER: acidentes
+      POSTGRES_PASSWORD: acidentes
+      POSTGRES_DB: acidentes
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acidentes -d acidentes"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
