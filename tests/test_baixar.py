@@ -115,3 +115,20 @@ def test_ar_1_constantes_do_arquivo_da_prf():
         "?id=1-G3MdmHBt6CprDwcW99xxC4BZ2DU5ryR&export=download"
     )
     assert Path("data/raw/datatran2025.zip") == DESTINO
+
+
+def test_ar_1_download_grava_no_parcial(tmp_path, servidor, monkeypatch):
+    import acidentes.baixar as modulo
+
+    url, _ = servidor
+    destino = tmp_path / "datatran.zip"
+    alvos = []
+    copia_original = modulo.shutil.copyfileobj
+
+    def copia(origem, arquivo):
+        alvos.append(Path(arquivo.name).name)
+        copia_original(origem, arquivo)
+
+    monkeypatch.setattr(modulo.shutil, "copyfileobj", copia)
+    assert modulo.baixar(url, destino, SHA_CONTEUDO) == destino
+    assert alvos == ["datatran.zip.parcial"]

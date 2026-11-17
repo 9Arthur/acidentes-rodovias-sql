@@ -90,12 +90,31 @@ def test_ar_5_valores_de_uma_linha_completa():
     assert linha["id"] == 652493
     assert linha["data_hora"] == pd.Timestamp("2025-01-01 06:20:00")
     assert linha["uf"] == "SP"
+    assert linha["municipio"] == "GUARULHOS"
+    assert linha["tipo"] == "Tombamento"
+    assert linha["fase_dia"] == "Pleno dia"
     assert linha["br"] == 116
     assert linha["km"] == 546.2
     assert linha["causa"] == "Pista esburacada"
     assert linha["classificacao"] == "Com Vítimas Feridas"
     assert linha["condicao_meteo"] == "Céu Claro"
     assert (linha["mortos"], linha["feridos"], linha["veiculos"]) == (0, 1, 2)
+    assert limpo.dtypes.astype(str).to_dict() == {
+        "id": "int64",
+        "data_hora": "datetime64[us]",
+        "uf": "str",
+        "br": "Int16",
+        "km": "float64",
+        "municipio": "str",
+        "causa": "str",
+        "tipo": "str",
+        "classificacao": "str",
+        "fase_dia": "str",
+        "condicao_meteo": "str",
+        "mortos": "Int16",
+        "feridos": "Int16",
+        "veiculos": "Int16",
+    }
 
 
 def test_ar_5_sentinelas_viram_nulo():
@@ -106,7 +125,7 @@ def test_ar_5_sentinelas_viram_nulo():
             {
                 "id": "1",
                 "classificacao_acidente": "NA",
-                "condicao_metereologica": "Ignorado",
+                "condicao_metereologica": " Ignorado ",
             },
             {
                 "id": "2",
@@ -114,7 +133,7 @@ def test_ar_5_sentinelas_viram_nulo():
                 "causa_acidente": "N/A",
                 "tipo_acidente": "Não Informado",
             },
-            {"id": "3"},
+            {"id": "3", "municipio": " GUARULHOS "},
         )
     )
     assert limpo["classificacao"].isna().tolist() == [True, False, False]
@@ -122,6 +141,7 @@ def test_ar_5_sentinelas_viram_nulo():
     assert limpo["municipio"].isna().tolist() == [False, True, False]
     assert limpo["causa"].isna().tolist() == [False, True, False]
     assert limpo["tipo"].isna().tolist() == [False, True, False]
+    assert limpo["municipio"].iloc[2] == "GUARULHOS"
 
 
 def test_ar_5_br_zero_vira_nulo_junto_com_o_km():
@@ -185,3 +205,14 @@ def test_ar_5_inteiros_aceitam_nulo(coluna):
 
     limpo, _ = limpar(bruto({"id": "1", coluna: "NA"}, {"id": "2"}))
     assert limpo[coluna].isna().tolist() == [True, False]
+    assert limpo["km"].tolist() == [225.0, 225.0]
+
+
+@pytest.mark.parametrize(
+    ("data", "hora"), [("01/01/2025", "06:20:00"), ("2025-01-01", "")]
+)
+def test_ar_5_data_fora_do_formato_interrompe(data, hora):
+    from acidentes.limpar import limpar
+
+    with pytest.raises(ValueError):
+        limpar(bruto({"id": "1"}, {"id": "2", "data_inversa": data, "horario": hora}))
