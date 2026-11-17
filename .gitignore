@@ -221,3 +221,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Projeto: o arquivo baixado da PRF e os dados gerados ficam fora do Git (AR-3).
+data/raw/
+data/clean/

@@ -1,0 +1,38 @@
+[project]
+name = "acidentes-rodovias-sql"
+version = "0.1.0"
+description = "Pipeline de dados de acidentes nas rodovias federais (PRF 2025) com análises em SQL."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "psycopg[binary]>=3.3.6",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.15,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+# Só versões publicadas no PyPI até 14 dias antes do dia da escolha (AR-4).
+exclude-newer = "2026-11-03T00:00:00Z"
+
+[tool.uv.build-backend]
+# O pacote se chama acidentes (src/acidentes), não acidentes_rodovias_sql.
+module-name = "acidentes"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.coverage.run]
+source = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.3",
+]
