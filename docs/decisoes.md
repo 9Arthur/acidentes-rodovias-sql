@@ -35,3 +35,11 @@ O `exclude-newer` do `pyproject.toml` faz o `uv` ignorar versões publicadas dep
 Por quê: no arquivo, `Ignorado` e `NA` significam "sem informação". Tratados como categoria, distorceriam as taxas por condição meteorológica.
 
 Antes de ler, o `limpar` passa pelo `acidentes.baixar`: só o arquivo com o sha256 da AR-1 chega à limpeza. Por isso ele não valida o encoding, variações das sentinelas nem o formato dos números; esses pontos foram conferidos no arquivo fixado (latin-1, as sentinelas acima, `km` só com vírgula decimal), e trocar o arquivo exige conferi-los de novo.
+
+## AR-6 — Carga idempotente por COPY
+
+`acidentes.carregar` cria a tabela `acidente` (o schema da ficha, com `IF NOT EXISTS`) e carrega o Parquet do `limpar`: `COPY` do CSV gerado pelo pandas para uma tabela temporária com a mesma estrutura, depois `INSERT ... ON CONFLICT (id) DO NOTHING` dela para a `acidente`, tudo numa transação. Rodar a carga duas vezes mantém as 72.529 linhas, e uma linha inválida (por exemplo, `uf` nula) desfaz a carga inteira.
+
+Por quê: o `COPY` é o jeito rápido de carregar no Postgres, mas não aceita `ON CONFLICT`; direto na tabela final, a segunda carga pararia na chave primária. O `id` é o da PRF (chave natural), então uma linha já carregada fica como está.
+
+Os testes rodam cada um num schema descartável (o `search_path` vai nas `options` da conexão), para nunca tocar na tabela `acidente` do banco local.
