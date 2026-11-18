@@ -115,3 +115,36 @@ def test_ar_1_constantes_do_arquivo_da_prf():
         "?id=1-G3MdmHBt6CprDwcW99xxC4BZ2DU5ryR&export=download"
     )
     assert Path("data/raw/datatran2025.zip") == DESTINO
+
+
+def test_ar_1_download_grava_no_parcial(tmp_path, servidor, monkeypatch):
+    import acidentes.baixar as modulo
+
+    url, _ = servidor
+    destino = tmp_path / "datatran.zip"
+    alvos = []
+    copia_original = modulo.shutil.copyfileobj
+
+    def copia(origem, arquivo):
+        alvos.append(Path(arquivo.name).name)
+        copia_original(origem, arquivo)
+
+    monkeypatch.setattr(modulo.shutil, "copyfileobj", copia)
+    assert modulo.baixar(url, destino, SHA_CONTEUDO) == destino
+    assert alvos == ["datatran.zip.parcial"]
+
+
+def test_ar_1_download_interrompido_nao_deixa_parcial(tmp_path, servidor, monkeypatch):
+    import acidentes.baixar as modulo
+
+    url, _ = servidor
+    destino = tmp_path / "raw" / "datatran.zip"
+
+    def quebra(origem, arquivo):
+        arquivo.write(b"pedaco")
+        raise OSError("conexao caiu")
+
+    monkeypatch.setattr(modulo.shutil, "copyfileobj", quebra)
+    with pytest.raises(OSError, match="conexao caiu"):
+        modulo.baixar(url, destino, SHA_CONTEUDO)
+    assert list(destino.parent.iterdir()) == []
