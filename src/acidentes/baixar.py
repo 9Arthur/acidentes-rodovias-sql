@@ -34,9 +34,16 @@ def baixar(url: str, destino: Path, sha_esperado: str) -> Path:
         raise HashDivergente(f"{destino}: sha256 {visto}, esperado {sha_esperado}")
     destino.parent.mkdir(parents=True, exist_ok=True)
     parcial = destino.with_name(destino.name + ".parcial")
-    with urllib.request.urlopen(url, timeout=120) as resposta, parcial.open("wb") as f:
-        shutil.copyfileobj(resposta, f)
-    visto = sha256_arquivo(parcial)
+    try:
+        with (
+            urllib.request.urlopen(url, timeout=120) as resposta,
+            parcial.open("wb") as f,
+        ):
+            shutil.copyfileobj(resposta, f)
+        visto = sha256_arquivo(parcial)
+    except BaseException:
+        parcial.unlink(missing_ok=True)
+        raise
     if visto == sha_esperado:
         parcial.replace(destino)
         return destino

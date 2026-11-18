@@ -6,7 +6,9 @@ from pathlib import Path
 
 import pandas as pd
 
-ORIGEM = Path("data/raw/datatran2025.zip")
+from acidentes import baixar
+
+ORIGEM = baixar.DESTINO
 DESTINO = Path("data/clean/acidentes_2025.parquet")
 SENTINELAS = frozenset({"", "NA", "N/A", "Ignorado", "Não Informado"})
 TEXTO = {
@@ -37,7 +39,7 @@ COLUNAS = [
 ]
 
 
-def numero_br(texto: str) -> float | None:
+def decimal_virgula(texto: str) -> float | None:
     """Número com vírgula decimal ("546,2") para float; sentinela vira None."""
     t = texto.strip()
     if t in SENTINELAS:
@@ -72,7 +74,7 @@ def limpar(bruto: pd.DataFrame) -> tuple[pd.DataFrame, int]:
     )
     for coluna in INTEIROS:
         limpo[coluna] = pd.to_numeric(_texto(df[coluna])).astype("Int16")
-    limpo["km"] = df["km"].map(numero_br).astype("float64")
+    limpo["km"] = df["km"].map(decimal_virgula).astype("float64")
     br_zero = limpo["br"] == 0
     limpo.loc[br_zero, ["br", "km"]] = pd.NA
     for origem, destino in TEXTO.items():
@@ -81,7 +83,8 @@ def limpar(bruto: pd.DataFrame) -> tuple[pd.DataFrame, int]:
 
 
 def main() -> None:
-    limpo, descartadas = limpar(ler_csv(ORIGEM))
+    origem = baixar.baixar(baixar.URL, ORIGEM, baixar.SHA256)
+    limpo, descartadas = limpar(ler_csv(origem))
     DESTINO.parent.mkdir(parents=True, exist_ok=True)
     limpo.to_parquet(DESTINO, index=False)
     print(f"{DESTINO}: {len(limpo)} linhas, {descartadas} descartada(s) sem id")

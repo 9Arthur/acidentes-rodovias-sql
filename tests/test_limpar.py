@@ -1,5 +1,6 @@
 """limpar: CSV da PRF (texto) para as 14 colunas do schema, com as regras da AR-5."""
 
+import hashlib
 import zipfile
 
 import pandas as pd
@@ -50,13 +51,13 @@ def bruto(*trocas):
     return pd.DataFrame([{**BASE, **t} for t in trocas], columns=CABECALHO, dtype=str)
 
 
-def test_numero_br():
-    from acidentes.limpar import numero_br
+def test_decimal_virgula():
+    from acidentes.limpar import decimal_virgula
 
-    assert numero_br("546,2") == 546.2
-    assert numero_br("225") == 225.0
-    assert numero_br("") is None
-    assert numero_br("NA") is None
+    assert decimal_virgula("546,2") == 546.2
+    assert decimal_virgula("225") == 225.0
+    assert decimal_virgula("") is None
+    assert decimal_virgula("NA") is None
 
 
 def test_ar_5_colunas_do_schema_na_ordem():
@@ -179,16 +180,23 @@ def test_ar_5_ler_csv_nao_converte_na_sozinho(tmp_path):
     assert lido["id"].tolist() == ["7", "8"]
 
 
-def test_ar_5_main_grava_o_parquet(tmp_path, monkeypatch, capsys):
-    import acidentes.limpar as modulo
-
-    origem = tmp_path / "raw" / "datatran.zip"
-    origem.parent.mkdir()
+def zip_de_teste(caminho):
+    """Grava em caminho um zip com 3 linhas (uma sem id, uma com br 0) e devolve o sha256 dele."""
+    caminho.parent.mkdir()
     csv = bruto({"id": "1"}, {"id": ""}, {"id": "2", "br": "0"}).to_csv(
         sep=";", index=False
     )
-    with zipfile.ZipFile(origem, "w") as z:
+    with zipfile.ZipFile(caminho, "w") as z:
         z.writestr("datatran.csv", csv.encode("latin-1"))
+    return hashlib.sha256(caminho.read_bytes()).hexdigest()
+
+
+def test_ar_5_main_grava_o_parquet(tmp_path, monkeypatch, capsys):
+    import acidentes.baixar
+    import acidentes.limpar as modulo
+
+    origem = tmp_path / "raw" / "datatran.zip"
+    monkeypatch.setattr(acidentes.baixar, "SHA256", zip_de_teste(origem))
     destino = tmp_path / "clean" / "acidentes.parquet"
     monkeypatch.setattr(modulo, "ORIGEM", origem)
     monkeypatch.setattr(modulo, "DESTINO", destino)
@@ -216,3 +224,18 @@ def test_ar_5_data_fora_do_formato_interrompe(data, hora):
 
     with pytest.raises(ValueError):
         limpar(bruto({"id": "1"}, {"id": "2", "data_inversa": data, "horario": hora}))
+
+
+def test_ar_5_main_confere_o_sha256_antes_de_ler(tmp_path, monkeypatch):
+    import acidentes.baixar
+    import acidentes.limpar as modulo
+
+    origem = tmp_path / "raw" / "datatran.zip"
+    zip_de_teste(origem)
+    monkeypatch.setattr(acidentes.baixar, "SHA256", "0" * 64)
+    destino = tmp_path / "clean" / "acidentes.parquet"
+    monkeypatch.setattr(modulo, "ORIGEM", origem)
+    monkeypatch.setattr(modulo, "DESTINO", destino)
+    with pytest.raises(acidentes.baixar.HashDivergente):
+        modulo.main()
+    assert not destino.exists()

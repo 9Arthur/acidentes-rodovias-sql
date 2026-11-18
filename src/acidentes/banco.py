@@ -8,8 +8,8 @@ URL_LOCAL = "postgresql://acidentes:acidentes@localhost:5434/acidentes"
 
 
 def url_do_banco() -> str:
-    """A URL do ambiente (CI) ou, sem ela, a do Postgres do docker-compose."""
-    return os.environ.get("DATABASE_URL", URL_LOCAL)
+    """A URL do ambiente (CI) ou, se ausente ou vazia, a do Postgres do docker-compose."""
+    return os.environ.get("DATABASE_URL") or URL_LOCAL
 
 
 def conectar() -> psycopg.Connection:

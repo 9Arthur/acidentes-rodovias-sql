@@ -132,3 +132,19 @@ def test_ar_1_download_grava_no_parcial(tmp_path, servidor, monkeypatch):
     monkeypatch.setattr(modulo.shutil, "copyfileobj", copia)
     assert modulo.baixar(url, destino, SHA_CONTEUDO) == destino
     assert alvos == ["datatran.zip.parcial"]
+
+
+def test_ar_1_download_interrompido_nao_deixa_parcial(tmp_path, servidor, monkeypatch):
+    import acidentes.baixar as modulo
+
+    url, _ = servidor
+    destino = tmp_path / "raw" / "datatran.zip"
+
+    def quebra(origem, arquivo):
+        arquivo.write(b"pedaco")
+        raise OSError("conexao caiu")
+
+    monkeypatch.setattr(modulo.shutil, "copyfileobj", quebra)
+    with pytest.raises(OSError, match="conexao caiu"):
+        modulo.baixar(url, destino, SHA_CONTEUDO)
+    assert list(destino.parent.iterdir()) == []
