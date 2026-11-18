@@ -38,7 +38,7 @@ Antes de ler, o `limpar` passa pelo `acidentes.baixar`: só o arquivo com o sha2
 
 ## AR-6 — Carga idempotente por COPY
 
-`acidentes.carregar` cria a tabela `acidente` (o schema da ficha, com `IF NOT EXISTS`) e carrega o Parquet do `limpar`: `COPY` do CSV gerado pelo pandas para uma tabela temporária com a mesma estrutura, depois `INSERT ... ON CONFLICT (id) DO NOTHING` dela para a `acidente`, tudo numa transação. Rodar a carga duas vezes mantém as 72.529 linhas, e uma linha inválida (por exemplo, `uf` nula) desfaz a carga inteira.
+`acidentes.carregar` cria a tabela `acidente` (o schema da ficha, com `IF NOT EXISTS`) e carrega o Parquet do `limpar`: `COPY` do CSV gerado pelo pandas para uma tabela temporária com as colunas, os tipos, o `NOT NULL` e os índices da `acidente`, inclusive a chave primária (`LIKE ... INCLUDING INDEXES`), depois `INSERT ... ON CONFLICT (id) DO NOTHING` dela para a `acidente`, tudo num bloco de transação (o `COMMIT` é de quem abriu a conexão). Rodar a carga duas vezes mantém as 72.529 linhas. Uma linha inválida (por exemplo, `uf` nula) ou um `id` repetido no próprio Parquet desfaz a carga inteira; `mortos` ou `feridos` nulos também, porque o `DEFAULT 0` só vale quando a coluna fica fora do `INSERT`, e o `COPY` envia as 14.
 
 Por quê: o `COPY` é o jeito rápido de carregar no Postgres, mas não aceita `ON CONFLICT`; direto na tabela final, a segunda carga pararia na chave primária. O `id` é o da PRF (chave natural), então uma linha já carregada fica como está.
 
