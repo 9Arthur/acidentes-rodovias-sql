@@ -110,25 +110,27 @@ def test_ar_6_cria_a_tabela_da_ficha_e_os_indices(conn):
     criar_tabela(conn)
     criar_tabela(conn)
     colunas = conn.execute(
-        "SELECT attname, format_type(atttypid, atttypmod), attnotnull"
-        " FROM pg_attribute WHERE attrelid = 'acidente'::regclass"
-        " AND attnum > 0 AND NOT attisdropped ORDER BY attnum"
+        "SELECT a.attname, format_type(a.atttypid, a.atttypmod), a.attnotnull,"
+        " pg_get_expr(d.adbin, d.adrelid) FROM pg_attribute a"
+        " LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum"
+        " WHERE a.attrelid = 'acidente'::regclass"
+        " AND a.attnum > 0 AND NOT a.attisdropped ORDER BY a.attnum"
     ).fetchall()
     assert colunas == [
-        ("id", "bigint", True),
-        ("data_hora", "timestamp without time zone", True),
-        ("uf", "character(2)", True),
-        ("br", "smallint", False),
-        ("km", "numeric(7,1)", False),
-        ("municipio", "text", False),
-        ("causa", "text", False),
-        ("tipo", "text", False),
-        ("classificacao", "text", False),
-        ("fase_dia", "text", False),
-        ("condicao_meteo", "text", False),
-        ("mortos", "smallint", True),
-        ("feridos", "smallint", True),
-        ("veiculos", "smallint", False),
+        ("id", "bigint", True, None),
+        ("data_hora", "timestamp without time zone", True, None),
+        ("uf", "character(2)", True, None),
+        ("br", "smallint", False, None),
+        ("km", "numeric(7,1)", False, None),
+        ("municipio", "text", False, None),
+        ("causa", "text", False, None),
+        ("tipo", "text", False, None),
+        ("classificacao", "text", False, None),
+        ("fase_dia", "text", False, None),
+        ("condicao_meteo", "text", False, None),
+        ("mortos", "smallint", True, "0"),
+        ("feridos", "smallint", True, "0"),
+        ("veiculos", "smallint", False, None),
     ]
     indices = conn.execute(
         "SELECT replace(indexdef, current_schema() || '.', '') FROM pg_indexes"
@@ -152,15 +154,21 @@ def test_ar_6_carrega_valores_e_nulos(conn):
             {"id": 1},
             {"id": 2, "br": None, "km": None, "classificacao": None},
             {"id": 3, "km": 225.0, "municipio": 'SAO "X", Y', "veiculos": None},
+            {"id": 4, "municipio": "A\nB"},
+            {"id": 5, "municipio": "A\rB"},
         ),
     )
-    assert inseridas == 3
+    assert inseridas == 5
     assert linhas(conn) == [
         (1, HORA, "SP", 116, Decimal("546.2"), "GUARULHOS", *TEXTOS)
         + ("Com Vítimas Feridas", *FIM, 0, 1, 2),
         (2, HORA, "SP", None, None, "GUARULHOS", *TEXTOS, None, *FIM, 0, 1, 2),
         (3, HORA, "SP", 116, Decimal("225.0"), 'SAO "X", Y', *TEXTOS)
         + ("Com Vítimas Feridas", *FIM, 0, 1, None),
+        (4, HORA, "SP", 116, Decimal("546.2"), "A\nB", *TEXTOS)
+        + ("Com Vítimas Feridas", *FIM, 0, 1, 2),
+        (5, HORA, "SP", 116, Decimal("546.2"), "A\rB", *TEXTOS)
+        + ("Com Vítimas Feridas", *FIM, 0, 1, 2),
     ]
 
 
@@ -193,6 +201,24 @@ def test_ar_6_carga_com_linha_invalida_nao_grava_nada(conn):
         carregar(conn, quadro({"id": 2}, {"id": 3, "uf": None}))
     assert [x[0] for x in linhas(conn)] == [1]
     assert conn.execute("SELECT to_regclass('acidente_carga')").fetchone() == (None,)
+
+
+def test_ar_6_id_repetido_no_parquet_derruba_a_carga(conn):
+    from acidentes.carregar import carregar, criar_tabela
+
+    criar_tabela(conn)
+    with pytest.raises(psycopg.errors.UniqueViolation):
+        carregar(conn, quadro({"id": 1}, {"id": 1, "municipio": "OUTRO"}))
+    assert linhas(conn) == []
+    assert conn.execute("SELECT to_regclass('acidente_carga')").fetchone() == (None,)
+
+
+def test_ar_6_conexao_de_teste_fica_no_schema_descartavel(esquema, conn):
+    from acidentes.banco import url_do_banco
+
+    assert conn.execute("SELECT current_schema()").fetchone() == (esquema,)
+    with psycopg.connect(url_do_banco()) as sem_options:
+        assert sem_options.execute("SELECT current_schema()").fetchone() == ("public",)
 
 
 def test_ar_6_main_carrega_o_parquet_duas_vezes_sem_duplicar(

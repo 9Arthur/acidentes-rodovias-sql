@@ -34,12 +34,17 @@ def criar_tabela(conn: psycopg.Connection) -> None:
 
 
 def carregar(conn: psycopg.Connection, df: pd.DataFrame) -> int:
-    """COPY para uma tabela temporária e INSERT ... ON CONFLICT DO NOTHING, numa transação.
+    """COPY para uma tabela temporária e INSERT ... ON CONFLICT DO NOTHING.
 
-    Devolve quantas linhas entraram; as de id já existente ficam como estavam.
+    Tudo num bloco de transação: savepoint, se a conexão já estiver em transação; o
+    COMMIT é de quem abriu a conexão. A temporária leva a chave primária, então um id
+    repetido no próprio quadro derruba a carga. Devolve quantas linhas entraram; as de
+    id já existente no banco ficam como estavam.
     """
     with conn.transaction():
-        conn.execute("CREATE TEMP TABLE acidente_carga (LIKE acidente)")
+        conn.execute(
+            "CREATE TEMP TABLE acidente_carga (LIKE acidente INCLUDING INDEXES)"
+        )
         with conn.cursor().copy(
             f"COPY acidente_carga ({LISTA}) FROM STDIN (FORMAT csv)"
         ) as cp:
