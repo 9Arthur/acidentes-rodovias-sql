@@ -48,7 +48,7 @@ Os testes rodam cada um num schema descartável (o `search_path` vai nas `option
 
 Cada pergunta da análise é um arquivo comentado em `sql/`, com o número na frente do nome (`01_acidentes_por_mes.sql`). `acidentes.consultas.executar(conn, nome)` lê o arquivo e devolve os nomes das colunas e as linhas.
 
-Cada consulta é testada contra `tests/fixtures/acidentes_50.csv`: 50 acidentes sintéticos, carregados num schema descartável, com o resultado inteiro (colunas e linhas, na ordem) comparado ao esperado calculado à mão. A fixture tem os casos que mudam o resultado: mês sem acidente, empates na contagem e nos mortos, o mesmo km da mesma BR em duas UFs, km terminado em ,5 e linhas sem BR, sem classificação e sem condição meteorológica.
+Cada consulta é testada contra `tests/fixtures/acidentes_50.csv`: 50 acidentes sintéticos, carregados num schema descartável, com o resultado inteiro (colunas e linhas, na ordem) comparado ao esperado calculado à mão. A fixture tem os casos que mudam o resultado: mês sem acidente, empates na contagem e nos mortos, o mesmo km da mesma BR em duas UFs, km terminado em ,5, linhas sem BR, sem classificação e sem condição meteorológica, UFs fora da comparação, causas empatadas dentro e fora das 3 primeiras posições e as quatro fases do dia.
 
 As escolhas de cada consulta estão no comentário do arquivo:
 
@@ -57,8 +57,20 @@ As escolhas de cada consulta estão no comentário do arquivo:
 - hora do dia: as 24 horas, com a classificação da PRF como gravidade;
 - dia da semana: `ISODOW` de `data_hora` e os 3 tipos mais frequentes de cada dia;
 - condição meteorológica: mortos por acidente, sem as linhas sem condição informada;
-- trecho: UF + BR + km inteiro, porque o mesmo par (BR, km) aparece em mais de uma UF.
+- trecho: UF + BR + km inteiro, porque o mesmo par (BR, km) aparece em mais de uma UF;
+- comparação entre estados: MG e SC, as duas UFs com mais acidentes, com as taxas ao lado da contagem;
+- janela móvel: média de 7 dias por `ROWS BETWEEN 6 PRECEDING AND CURRENT ROW`, com os dias sem acidente preenchidos com zero e a média nula nos 6 primeiros dias, em que a janela ainda não está completa;
+- causas por UF: `RANK() OVER (PARTITION BY uf ...)`, as 3 primeiras posições com os empates mantidos;
+- fase do dia: mortos por 100 acidentes e a parte dos acidentes com vítima fatal.
 
-Nas consultas 4 e 5, o empate de texto é desfeito com `COLLATE "C"`, para que a ordem não dependa do idioma configurado no servidor.
+Nas consultas 4, 5, 9 e 10, o empate de texto é desfeito com `COLLATE "C"`, para que a ordem não dependa do idioma configurado no servidor. A consulta 9 tem na fixture um empate em que as duas ordens divergem: em bytes, `Condutor Dormindo` vem antes de `Condutor deixou ...`; no idioma do servidor, depois.
 
 Por quê: um arquivo por pergunta deixa cada consulta legível e revisável sozinha. Comparar o resultado inteiro, e não só "devolve linhas", pega o erro de lógica (empate, nulo, arredondamento), que é onde consulta de análise erra sem dar erro.
+
+## AR-8 — Relatório gerado por script, com matplotlib
+
+`acidentes.relatorio` roda as 10 consultas por `acidentes.consultas.executar` e escreve o `RELATORIO.md` (uma seção por consulta, com a tabela do resultado) e três gráficos em `docs/img/`: acidentes por mês, acidentes e acidentes com vítimas fatais por hora, e a média móvel de 7 dias. Tabela com mais de 30 linhas vai recolhida num `<details>`. O relatório e os PNGs são gerados no banco carregado com o arquivo de 2025 e commitados; os testes geram os mesmos arquivos a partir da fixture, numa pasta temporária.
+
+Os gráficos usam o `matplotlib` pela `Figure`, sem `pyplot`: não depende de tela nem de estado global. O PNG é gravado sem a versão do `matplotlib` nos metadados, para só mudar quando o gráfico muda. O `matplotlib` entrou com o corte de 14 dias da AR-4 (`exclude-newer` em 05/11/2026).
+
+Por quê: o relatório sai das mesmas consultas testadas; editado à mão, ele poderia divergir delas sem ninguém perceber.
