@@ -43,3 +43,22 @@ Antes de ler, o `limpar` passa pelo `acidentes.baixar`: só o arquivo com o sha2
 Por quê: o `COPY` é o jeito rápido de carregar no Postgres, mas não aceita `ON CONFLICT`; direto na tabela final, a segunda carga pararia na chave primária. O `id` é o da PRF (chave natural), então uma linha já carregada fica como está.
 
 Os testes rodam cada um num schema descartável (o `search_path` vai nas `options` da conexão), para nunca tocar na tabela `acidente` do banco local.
+
+## AR-7 — Consultas em `sql/`, executadas por `acidentes.consultas`
+
+Cada pergunta da análise é um arquivo comentado em `sql/`, com o número na frente do nome (`01_acidentes_por_mes.sql`). `acidentes.consultas.executar(conn, nome)` lê o arquivo e devolve os nomes das colunas e as linhas.
+
+Cada consulta é testada contra `tests/fixtures/acidentes_50.csv`: 50 acidentes sintéticos, carregados num schema descartável, com o resultado inteiro (colunas e linhas, na ordem) comparado ao esperado calculado à mão. A fixture tem os casos que mudam o resultado: mês sem acidente, empates na contagem e nos mortos, o mesmo km da mesma BR em duas UFs, km terminado em ,5 e linhas sem BR, sem classificação e sem condição meteorológica.
+
+As escolhas de cada consulta estão no comentário do arquivo:
+
+- por mês: variação sobre o mês anterior com `LAG`, e os meses sem acidente preenchidos com zero por `generate_series`;
+- BRs: dois `RANK`, por acidentes e por mortos; ficam as BRs que estão entre as 10 primeiras em pelo menos um;
+- hora do dia: as 24 horas, com a classificação da PRF como gravidade;
+- dia da semana: `ISODOW` de `data_hora` e os 3 tipos mais frequentes de cada dia;
+- condição meteorológica: mortos por acidente, sem as linhas sem condição informada;
+- trecho: UF + BR + km inteiro, porque o mesmo par (BR, km) aparece em mais de uma UF.
+
+Nas consultas 4 e 5, o empate de texto é desfeito com `COLLATE "C"`, para que a ordem não dependa do idioma configurado no servidor.
+
+Por quê: um arquivo por pergunta deixa cada consulta legível e revisável sozinha. Comparar o resultado inteiro, e não só "devolve linhas", pega o erro de lógica (empate, nulo, arredondamento), que é onde consulta de análise erra sem dar erro.
