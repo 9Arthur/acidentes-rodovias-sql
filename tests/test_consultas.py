@@ -1,19 +1,16 @@
 """Consultas de sql/ contra a fixture de 50 acidentes (AR-7).
 
 Os esperados foram calculados à mão sobre tests/fixtures/acidentes_50.csv, antes das
-consultas; cada teste compara o resultado inteiro (colunas e linhas, na ordem).
+consultas; cada teste compara o resultado inteiro (colunas e linhas, na ordem). Na
+consulta 8 (343 dias) as contagens por dia são à mão e as médias saem de uma janela de 7
+dias em Python sobre elas, conferida por amostras calculadas à mão.
 """
 
-import uuid
-from datetime import date
-from decimal import Decimal
-from pathlib import Path
+from datetime import date, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 
-import psycopg
 import pytest
-from psycopg.conninfo import make_conninfo
 
-FIXTURE = Path(__file__).parent / "fixtures" / "acidentes_50.csv"
 T1 = "Colisão traseira"
 T2 = "Saída de leito carroçável"
 T3 = "Colisão transversal"
@@ -21,34 +18,12 @@ T4 = "Tombamento"
 T5 = "Atropelamento de Pedestre"
 
 
-@pytest.fixture(scope="module")
-def conn():
-    """Schema descartável com a tabela acidente e as 50 linhas da fixture.
-
-    Depois da carga a conexão fica em autocommit: um erro de SQL num teste não deixa a
-    transação abortada para os seguintes.
-    """
-    from acidentes.banco import url_do_banco
-    from acidentes.carregar import criar_tabela
-
-    nome = f"teste_{uuid.uuid4().hex[:12]}"
-    with psycopg.connect(url_do_banco(), autocommit=True) as c:
-        c.execute(f"CREATE SCHEMA {nome}")
-    try:
-        conninfo = make_conninfo(url_do_banco(), options=f"-c search_path={nome}")
-        with psycopg.connect(conninfo) as c:
-            criar_tabela(c)
-            with c.cursor().copy("COPY acidente FROM STDIN (FORMAT csv, HEADER)") as cp:
-                cp.write(FIXTURE.read_bytes())
-            c.commit()
-            c.autocommit = True
-            yield c
-    finally:
-        with psycopg.connect(url_do_banco(), autocommit=True) as c:
-            c.execute(f"DROP SCHEMA {nome} CASCADE")
+@pytest.fixture
+def conn(conn_50):
+    return conn_50
 
 
-def test_ar_7_pasta_sql_tem_as_seis_consultas_comentadas():
+def test_ar_7_pasta_sql_tem_as_dez_consultas_comentadas():
     from acidentes.consultas import PASTA
 
     arquivos = sorted(PASTA.glob("*.sql"))
@@ -59,6 +34,10 @@ def test_ar_7_pasta_sql_tem_as_seis_consultas_comentadas():
         "04_dia_semana_tipo.sql",
         "05_meteo_mortos.sql",
         "06_trechos.sql",
+        "07_comparacao_ufs.sql",
+        "08_media_movel.sql",
+        "09_causas_por_uf.sql",
+        "10_fase_dia.sql",
     ]
     for arquivo in arquivos:
         assert arquivo.read_text(encoding="utf-8").startswith("-- ")
@@ -195,5 +174,110 @@ def test_ar_7_consulta_6_trechos(conn):
             ("MT", 364, 3, 2),
             ("PR", 277, 600, 2),
             ("RJ", 101, 50, 2),
+        ],
+    )
+
+
+def test_ar_7_consulta_7_comparacao_ufs(conn):
+    from acidentes.consultas import executar
+
+    d = Decimal
+    assert executar(conn, "07_comparacao_ufs") == (
+        ["uf", "acidentes", "mortos", "mortos_por_acidente", "pct_com_fatais"],
+        [
+            ("MG", 15, 5, d("0.3333"), d("20.0")),
+            ("SC", 6, 4, d("0.6667"), d("33.3")),
+        ],
+    )
+
+
+def test_ar_7_consulta_8_media_movel(conn):
+    from acidentes.consultas import executar
+
+    d = Decimal
+    inicio = date(2025, 1, 6)
+    com_acidente = {
+        date(2025, 1, 6): 6,
+        date(2025, 2, 3): 3,
+        date(2025, 2, 4): 1,
+        date(2025, 4, 8): 5,
+        date(2025, 5, 7): 5,
+        date(2025, 6, 4): 2,
+        date(2025, 6, 5): 1,
+        date(2025, 7, 10): 4,
+        date(2025, 8, 8): 6,
+        date(2025, 9, 12): 2,
+        date(2025, 9, 13): 2,
+        date(2025, 10, 11): 5,
+        date(2025, 11, 8): 1,
+        date(2025, 11, 9): 2,
+        date(2025, 12, 14): 5,
+    }
+    dias = [inicio + timedelta(n) for n in range(343)]
+    serie = [com_acidente.get(dia, 0) for dia in dias]
+    medias = [None] * 6 + [
+        (d(sum(serie[n - 6 : n + 1])) / 7).quantize(d("0.01"), ROUND_HALF_UP)
+        for n in range(6, 343)
+    ]
+    amostras = {
+        date(2025, 1, 11): None,
+        date(2025, 1, 12): d("0.86"),
+        date(2025, 1, 13): d("0.00"),
+        date(2025, 2, 4): d("0.57"),
+        date(2025, 2, 9): d("0.57"),
+        date(2025, 2, 10): d("0.14"),
+        date(2025, 2, 11): d("0.00"),
+        date(2025, 6, 10): d("0.43"),
+        date(2025, 6, 11): d("0.14"),
+        date(2025, 12, 14): d("0.71"),
+    }
+    assert {dia: medias[dias.index(dia)] for dia in amostras} == amostras
+    assert executar(conn, "08_media_movel") == (
+        ["dia", "acidentes", "media_7d"],
+        list(zip(dias, serie, medias, strict=True)),
+    )
+
+
+def test_ar_7_consulta_9_causas_por_uf(conn):
+    from acidentes.consultas import executar
+
+    rea = "Reação tardia ou ineficiente do condutor"
+    assert executar(conn, "09_causas_por_uf") == (
+        ["uf", "posicao", "causa", "acidentes"],
+        [
+            ("AC", 1, rea, 2),
+            ("DF", 1, rea, 2),
+            ("ES", 1, rea, 1),
+            ("GO", 1, rea, 6),
+            ("MG", 1, "Ausência de reação do condutor", 4),
+            ("MG", 2, "Condutor Dormindo", 3),
+            ("MG", 2, "Condutor deixou de manter distância do veículo da frente", 3),
+            ("MT", 1, rea, 4),
+            ("PR", 1, rea, 4),
+            ("RJ", 1, rea, 2),
+            ("RO", 1, rea, 1),
+            ("SC", 1, rea, 4),
+            ("SC", 2, "Animais na Pista", 2),
+            ("SP", 1, "Velocidade Incompatível", 2),
+            ("SP", 2, "Acessar a via sem observar a presença dos outros veículos", 1),
+            ("SP", 2, "Ingestão de álcool pelo condutor", 1),
+            ("SP", 2, "Manobra de mudança de faixa", 1),
+            ("SP", 2, rea, 1),
+            ("TO", 1, rea, 1),
+        ],
+    )
+
+
+def test_ar_7_consulta_10_fase_dia(conn):
+    from acidentes.consultas import executar
+
+    d = Decimal
+    assert executar(conn, "10_fase_dia") == (
+        ["fase_dia", "acidentes", "mortos", "mortos_por_acidente", "pct_com_fatais"],
+        [
+            ("Plena Noite", 16, 15, d("0.9375"), d("62.5")),
+            ("Anoitecer", 13, 5, d("0.3846"), d("15.4")),
+            ("Amanhecer", 10, 0, d("0.0000"), d("0.0")),
+            ("Pleno dia", 11, 0, d("0.0000"), d("0.0")),
         ],
     )
