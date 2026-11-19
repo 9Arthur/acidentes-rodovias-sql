@@ -1,7 +1,9 @@
 -- Comparação entre dois estados: MG e SC, as duas UFs com mais acidentes em 2025, lado a
 -- lado. Além da contagem, as taxas (mortos por acidente e parte dos acidentes com vítima
--- fatal), porque o estado com mais acidentes não é necessariamente o mais letal. As UFs
--- ficam fixas no arquivo: trocar a comparação é trocar a lista do WHERE.
+-- fatal), porque o estado com mais acidentes não é necessariamente o mais letal. Acidente
+-- sem classificação conta no total e não como fatal. As UFs ficam fixas: trocar a
+-- comparação é trocar a lista do WHERE, este comentário e o título da seção 7 em
+-- acidentes.relatorio. A ordem é pelo número de acidentes.
 SELECT
     uf,
     count(*) AS acidentes,

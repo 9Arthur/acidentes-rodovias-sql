@@ -1,11 +1,13 @@
 """Consultas de sql/ contra a fixture de 50 acidentes (AR-7).
 
 Os esperados foram calculados à mão sobre tests/fixtures/acidentes_50.csv, antes das
-consultas; cada teste compara o resultado inteiro (colunas e linhas, na ordem).
+consultas; cada teste compara o resultado inteiro (colunas e linhas, na ordem). Na
+consulta 8 (343 dias) as contagens por dia são à mão e as médias saem de uma janela de 7
+dias em Python sobre elas, conferida por amostras calculadas à mão.
 """
 
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
@@ -184,7 +186,7 @@ def test_ar_7_consulta_7_comparacao_ufs(conn):
         ["uf", "acidentes", "mortos", "mortos_por_acidente", "pct_com_fatais"],
         [
             ("MG", 15, 5, d("0.3333"), d("20.0")),
-            ("SC", 5, 4, d("0.8000"), d("40.0")),
+            ("SC", 6, 4, d("0.6667"), d("33.3")),
         ],
     )
 
@@ -193,10 +195,7 @@ def test_ar_7_consulta_8_media_movel(conn):
     from acidentes.consultas import executar
 
     d = Decimal
-    colunas, linhas = executar(conn, "08_media_movel")
-    assert colunas == ["dia", "acidentes", "media_7d"]
     inicio = date(2025, 1, 6)
-    assert [x[0] for x in linhas] == [inicio + timedelta(n) for n in range(343)]
     com_acidente = {
         date(2025, 1, 6): 6,
         date(2025, 2, 3): 3,
@@ -214,29 +213,29 @@ def test_ar_7_consulta_8_media_movel(conn):
         date(2025, 11, 9): 2,
         date(2025, 12, 14): 5,
     }
-    assert [x[1] for x in linhas] == [com_acidente.get(x[0], 0) for x in linhas]
-    assert [x[2] for x in linhas[:6]] == [None] * 6
-    assert None not in [x[2] for x in linhas[6:]]
-    por_dia = {x[0]: x for x in linhas}
-    assert [por_dia[date(2025, m, dia)] for m, dia in [(1, 12), (1, 13)]] == [
-        (date(2025, 1, 12), 0, d("0.86")),
-        (date(2025, 1, 13), 0, d("0.00")),
+    dias = [inicio + timedelta(n) for n in range(343)]
+    serie = [com_acidente.get(dia, 0) for dia in dias]
+    medias = [None] * 6 + [
+        (d(sum(serie[n - 6 : n + 1])) / 7).quantize(d("0.01"), ROUND_HALF_UP)
+        for n in range(6, 343)
     ]
-    assert [
-        por_dia[date(2025, m, dia)] for m, dia in [(2, 4), (2, 9), (2, 10), (2, 11)]
-    ] == [
-        (date(2025, 2, 4), 1, d("0.57")),
-        (date(2025, 2, 9), 0, d("0.57")),
-        (date(2025, 2, 10), 0, d("0.14")),
-        (date(2025, 2, 11), 0, d("0.00")),
-    ]
-    assert [por_dia[date(2025, m, dia)] for m, dia in [(6, 10), (6, 11), (12, 14)]] == [
-        (date(2025, 6, 10), 0, d("0.43")),
-        (date(2025, 6, 11), 0, d("0.14")),
-        (date(2025, 12, 14), 5, d("0.71")),
-    ]
-    assert sum(1 for x in linhas[6:] if x[2] > 0) == 69
-    assert max(x[2] for x in linhas[6:]) == d("0.86")
+    amostras = {
+        date(2025, 1, 11): None,
+        date(2025, 1, 12): d("0.86"),
+        date(2025, 1, 13): d("0.00"),
+        date(2025, 2, 4): d("0.57"),
+        date(2025, 2, 9): d("0.57"),
+        date(2025, 2, 10): d("0.14"),
+        date(2025, 2, 11): d("0.00"),
+        date(2025, 6, 10): d("0.43"),
+        date(2025, 6, 11): d("0.14"),
+        date(2025, 12, 14): d("0.71"),
+    }
+    assert {dia: medias[dias.index(dia)] for dia in amostras} == amostras
+    assert executar(conn, "08_media_movel") == (
+        ["dia", "acidentes", "media_7d"],
+        list(zip(dias, serie, medias, strict=True)),
+    )
 
 
 def test_ar_7_consulta_9_causas_por_uf(conn):
@@ -254,11 +253,10 @@ def test_ar_7_consulta_9_causas_por_uf(conn):
             ("MG", 2, "Condutor Dormindo", 3),
             ("MG", 2, "Condutor deixou de manter distância do veículo da frente", 3),
             ("MT", 1, rea, 4),
-            ("PB", 1, rea, 1),
             ("PR", 1, rea, 4),
             ("RJ", 1, rea, 2),
             ("RO", 1, rea, 1),
-            ("SC", 1, rea, 3),
+            ("SC", 1, rea, 4),
             ("SC", 2, "Animais na Pista", 2),
             ("SP", 1, "Velocidade Incompatível", 2),
             ("SP", 2, "Acessar a via sem observar a presença dos outros veículos", 1),
@@ -275,11 +273,11 @@ def test_ar_7_consulta_10_fase_dia(conn):
 
     d = Decimal
     assert executar(conn, "10_fase_dia") == (
-        ["fase_dia", "acidentes", "mortos", "mortos_por_100", "pct_com_fatais"],
+        ["fase_dia", "acidentes", "mortos", "mortos_por_acidente", "pct_com_fatais"],
         [
-            ("Plena Noite", 16, 15, d("93.8"), d("62.5")),
-            ("Anoitecer", 13, 5, d("38.5"), d("15.4")),
-            ("Amanhecer", 10, 0, d("0.0"), d("0.0")),
-            ("Pleno dia", 11, 0, d("0.0"), d("0.0")),
+            ("Plena Noite", 16, 15, d("0.9375"), d("62.5")),
+            ("Anoitecer", 13, 5, d("0.3846"), d("15.4")),
+            ("Amanhecer", 10, 0, d("0.0000"), d("0.0")),
+            ("Pleno dia", 11, 0, d("0.0000"), d("0.0")),
         ],
     )

@@ -46,6 +46,6 @@ id,data_hora,uf,br,km,municipio,causa,tipo,classificacao,fase_dia,condicao_meteo
 45,2025-11-09 12:10:00,DF,60,150.0,MUNICIPIO TESTE,Reação tardia ou ineficiente do condutor,Atropelamento de Pedestre,Sem Vítimas,Pleno dia,Chuva,0,0,2
 46,2025-12-14 19:10:00,MT,70,20.0,MUNICIPIO TESTE,Reação tardia ou ineficiente do condutor,Atropelamento de Pedestre,Com Vítimas Fatais,Plena Noite,Chuva,3,1,2
 47,2025-12-14 19:10:00,MT,163,500.0,MUNICIPIO TESTE,Reação tardia ou ineficiente do condutor,Colisão traseira,Com Vítimas Feridas,Plena Noite,Nublado,0,1,2
-48,2025-12-14 18:10:00,PB,230,10.0,MUNICIPIO TESTE,Reação tardia ou ineficiente do condutor,Colisão traseira,,Anoitecer,Chuva,0,1,2
+48,2025-12-14 18:10:00,SC,230,10.0,MUNICIPIO TESTE,Reação tardia ou ineficiente do condutor,Colisão traseira,,Anoitecer,Chuva,0,1,2
 49,2025-12-14 19:10:00,AC,,,MUNICIPIO TESTE,Reação tardia ou ineficiente do condutor,Colisão transversal,Com Vítimas Fatais,Plena Noite,Céu Claro,1,1,2
 50,2025-12-14 07:10:00,AC,,,MUNICIPIO TESTE,Reação tardia ou ineficiente do condutor,Saída de leito carroçável,Sem Vítimas,Amanhecer,,0,0,2

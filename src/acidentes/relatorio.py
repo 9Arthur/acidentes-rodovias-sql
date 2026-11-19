@@ -17,7 +17,7 @@ TITULOS = {
     "04_dia_semana_tipo": "Dia da semana × tipo de acidente",
     "05_meteo_mortos": "Condição meteorológica × mortos por acidente",
     "06_trechos": "Trechos com mais acidentes",
-    "07_comparacao_ufs": "MG × SC",
+    "07_comparacao_ufs": "Comparação entre dois estados (MG × SC)",
     "08_media_movel": "Média móvel de 7 dias",
     "09_causas_por_uf": "Ranking de causas por UF",
     "10_fase_dia": "Letalidade por fase do dia",
@@ -30,9 +30,14 @@ GRAFICOS = {
 # Tabela com mais linhas que isto vai recolhida num <details>, para o relatório não virar
 # uma lista de 365 dias.
 RECOLHER = 30
+AZUL = "#4c72b0"
+AZUL_CLARO = "#c5d1e0"
+VERMELHO = "#c44e52"
 
 
 def celula(valor) -> str:
+    # Cobre os tipos que as 10 consultas devolvem: date (nenhuma devolve datetime),
+    # Decimal, int e texto sem quebra de linha.
     if valor is None:
         return ""
     if isinstance(valor, date):
@@ -51,34 +56,47 @@ def tabela(colunas: list[str], linhas: list[tuple]) -> str:
     return texto
 
 
-def grafico(nome: str, colunas: list[str], linhas: list[tuple], caminho: Path) -> None:
+def figura(nome: str, colunas: list[str], linhas: list[tuple]) -> Figure:
+    """Monta o gráfico de uma consulta; quem chama decide onde gravar."""
     dados = {c: [linha[i] for linha in linhas] for i, c in enumerate(colunas)}
     # Figure direto, sem pyplot: não depende de backend com tela nem de estado global.
     fig = Figure(figsize=(10, 4.5))
     ax = fig.subplots()
     if nome == "01_acidentes_por_mes":
         rotulos = [m.strftime("%m/%Y") for m in dados["mes"]]
-        ax.bar(rotulos, dados["acidentes"], color="#4c72b0")
+        ax.bar(rotulos, dados["acidentes"], color=AZUL)
         ax.set_ylabel("acidentes")
         ax.set_title("Acidentes por mês")
         ax.tick_params(axis="x", labelrotation=45)
     elif nome == "03_hora_gravidade":
-        ax.bar(dados["hora"], dados["acidentes"], color="#c5d1e0", label="acidentes")
-        ax.set_ylabel("acidentes")
+        # A gravidade por hora é a proporção de acidentes com vítima fatal; a contagem
+        # absoluta de fatais só repetiria o volume. Hora sem acidente fica sem ponto.
+        pct = [
+            None if a == 0 else 100 * f / a
+            for a, f in zip(dados["acidentes"], dados["com_fatais"], strict=True)
+        ]
+        ax.bar(dados["hora"], dados["acidentes"], color=AZUL_CLARO)
+        ax.set_ylabel("acidentes", color=AZUL)
+        ax.set_ylim(bottom=0)
         fatais = ax.twinx()
-        fatais.plot(dados["hora"], dados["com_fatais"], color="#c44e52", marker="o")
-        fatais.set_ylabel("com vítimas fatais", color="#c44e52")
+        fatais.plot(dados["hora"], pct, color=VERMELHO, marker="o")
+        fatais.set_ylabel("% com vítimas fatais", color=VERMELHO)
+        fatais.set_ylim(bottom=0)
         ax.set_xticks(range(24))
         ax.set_xlabel("hora do dia")
-        ax.set_title("Acidentes e acidentes com vítimas fatais por hora")
-    else:
+        ax.set_title("Acidentes por hora e % deles com vítimas fatais")
+    elif nome == "08_media_movel":
         media = [None if v is None else float(v) for v in dados["media_7d"]]
-        ax.plot(dados["dia"], media, color="#4c72b0")
-        ax.set_ylabel("acidentes por dia (média de 7 dias)")
-        ax.set_title("Média móvel de 7 dias")
+        ax.plot(dados["dia"], dados["acidentes"], color=AZUL_CLARO, label="por dia")
+        ax.plot(dados["dia"], media, color=AZUL, label="média de 7 dias")
+        ax.set_ylabel("acidentes por dia")
+        ax.set_ylim(bottom=0)
+        ax.legend(loc="lower right")
+        ax.set_title("Acidentes por dia e média móvel de 7 dias")
+    else:
+        raise ValueError(f"sem regra de gráfico para a consulta {nome}")
     fig.tight_layout()
-    # Sem a versão do matplotlib nos metadados: o PNG só muda quando o gráfico muda.
-    fig.savefig(caminho, dpi=100, metadata={"Software": None})
+    return fig
 
 
 def gerar(conn, destino: Path, imagens: Path) -> list[Path]:
@@ -87,7 +105,7 @@ def gerar(conn, destino: Path, imagens: Path) -> list[Path]:
     gerados = []
     partes = [
         "# Relatório — acidentes nas rodovias federais (PRF, 2025)\n",
-        "Gerado por `python -m acidentes.relatorio` a partir das consultas de `sql/`.\n",
+        "Gerado na raiz do repositório por `uv run python -m acidentes.relatorio`.\n",
     ]
     for numero, (nome, titulo) in enumerate(TITULOS.items(), start=1):
         colunas, linhas = consultas.executar(conn, nome)
@@ -95,7 +113,10 @@ def gerar(conn, destino: Path, imagens: Path) -> list[Path]:
         partes.append(f"Consulta: `sql/{nome}.sql`\n")
         if nome in GRAFICOS:
             caminho = imagens / GRAFICOS[nome]
-            grafico(nome, colunas, linhas, caminho)
+            # Sem a versão do matplotlib nos metadados: o PNG não muda só por ela.
+            figura(nome, colunas, linhas).savefig(
+                caminho, dpi=100, metadata={"Software": None}
+            )
             gerados.append(caminho)
             link = caminho.relative_to(destino.parent).as_posix()
             partes.append(f"![{titulo}]({link})\n")
