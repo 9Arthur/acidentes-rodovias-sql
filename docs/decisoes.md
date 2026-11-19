@@ -74,3 +74,9 @@ Por quê: um arquivo por pergunta deixa cada consulta legível e revisável sozi
 Os gráficos usam o `matplotlib` pela `Figure`, sem `pyplot`: não depende de tela nem de estado global. O PNG é gravado sem a versão do `matplotlib` nos metadados, para não mudar só por causa dela; os pixels ainda dependem da versão do `matplotlib` e das fontes. O `matplotlib` entrou com o corte de 14 dias da AR-4 (`exclude-newer` em 05/11/2026).
 
 Por quê: o relatório sai das mesmas consultas testadas; editado à mão, ele poderia divergir delas sem ninguém perceber.
+
+## AR-9 — Python 3.13
+
+O `pyproject.toml` pede `requires-python = ">=3.13"` e o `.python-version` fixa `3.13`; o `uv` usa essa versão no ambiente local e no CI.
+
+Por quê: é o mesmo Python do outro projeto do portfólio ([`salas-api`](https://github.com/9Arthur/salas-api)), então a máquina e o CI mantêm uma versão só.
