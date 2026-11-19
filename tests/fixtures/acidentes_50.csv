@@ -1,0 +1,51 @@
+id,data_hora,uf,br,km,municipio,causa,tipo,classificacao,fase_dia,condicao_meteo,mortos,feridos,veiculos
+1,2025-01-06 19:10:00,SP,116,225.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Fatais,Pleno dia,Céu Claro,2,1,2
+2,2025-01-06 07:10:00,SP,116,224.5,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+3,2025-01-06 12:10:00,SP,116,225.4,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+4,2025-01-06 07:10:00,SP,116,224.6,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Sem Vítimas,Pleno dia,Céu Claro,0,0,2
+5,2025-01-06 18:10:00,MG,116,225.0,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Com Vítimas Feridas,Pleno dia,Chuva,0,1,2
+6,2025-01-06 18:10:00,MG,116,225.2,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Com Vítimas Feridas,Pleno dia,Nublado,0,1,2
+7,2025-02-03 12:10:00,SP,116,225.5,MUNICIPIO TESTE,Causa de teste,Colisão transversal,Sem Vítimas,Pleno dia,Céu Claro,0,0,2
+8,2025-02-03 00:10:00,PR,116,100.0,MUNICIPIO TESTE,Causa de teste,Colisão transversal,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+9,2025-02-03 19:10:00,SC,101,50.0,MUNICIPIO TESTE,Causa de teste,Tombamento,Com Vítimas Fatais,Pleno dia,,3,1,2
+10,2025-02-04 19:10:00,SC,101,49.8,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Com Vítimas Fatais,Pleno dia,Céu Claro,1,1,2
+11,2025-04-08 18:10:00,SC,101,50.3,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Com Vítimas Feridas,Pleno dia,Chuva,0,1,2
+12,2025-04-08 12:10:00,SC,101,120.0,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+13,2025-04-08 07:10:00,SC,101,119.9,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Sem Vítimas,Pleno dia,Céu Claro,0,0,2
+14,2025-04-08 19:10:00,RJ,101,50.0,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Com Vítimas Feridas,Pleno dia,Nublado,0,1,2
+15,2025-04-08 12:10:00,RJ,101,50.1,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Sem Vítimas,Pleno dia,Céu Claro,0,0,2
+16,2025-05-07 19:10:00,MG,381,500.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Fatais,Pleno dia,Chuva,1,1,2
+17,2025-05-07 18:10:00,MG,381,500.4,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Chuva,0,1,2
+18,2025-05-07 07:10:00,MG,381,499.7,MUNICIPIO TESTE,Causa de teste,Tombamento,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+19,2025-05-07 07:10:00,MG,381,10.0,MUNICIPIO TESTE,Causa de teste,Tombamento,Sem Vítimas,Pleno dia,Céu Claro,0,0,2
+20,2025-05-07 00:10:00,MG,381,20.0,MUNICIPIO TESTE,Causa de teste,Colisão transversal,Com Vítimas Feridas,Pleno dia,,0,1,2
+21,2025-06-04 12:10:00,MG,381,30.0,MUNICIPIO TESTE,Causa de teste,Colisão transversal,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+22,2025-06-04 23:10:00,MG,40,688.0,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Com Vítimas Fatais,Pleno dia,Chuva,3,1,2
+23,2025-06-05 18:10:00,MG,40,687.9,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+24,2025-07-10 12:10:00,GO,40,5.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Sem Vítimas,Pleno dia,Céu Claro,0,0,2
+25,2025-07-10 12:10:00,DF,40,5.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Nublado,0,1,2
+26,2025-07-10 19:10:00,MG,40,700.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+27,2025-07-10 18:10:00,GO,153,300.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+28,2025-08-08 07:10:00,GO,153,300.2,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Sem Vítimas,Pleno dia,Neve,0,0,2
+29,2025-08-08 12:10:00,TO,153,300.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Chuva,0,1,2
+30,2025-08-08 07:10:00,GO,153,300.6,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+31,2025-08-08 19:10:00,MG,262,400.0,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Com Vítimas Fatais,Pleno dia,Céu Claro,1,1,2
+32,2025-08-08 18:10:00,MG,262,399.5,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Com Vítimas Feridas,Pleno dia,,0,1,2
+33,2025-08-08 12:10:00,ES,262,10.0,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Sem Vítimas,Pleno dia,Céu Claro,0,0,2
+34,2025-09-12 07:10:00,MG,262,10.0,MUNICIPIO TESTE,Causa de teste,Colisão transversal,Com Vítimas Feridas,Pleno dia,Nublado,0,1,2
+35,2025-09-12 19:10:00,MT,364,3.0,MUNICIPIO TESTE,Causa de teste,Tombamento,Com Vítimas Fatais,Pleno dia,Nublado,2,1,2
+36,2025-09-13 00:10:00,MT,364,3.2,MUNICIPIO TESTE,Causa de teste,Tombamento,Com Vítimas Feridas,Pleno dia,Nublado,0,1,2
+37,2025-09-13 12:10:00,RO,364,3.0,MUNICIPIO TESTE,Causa de teste,Tombamento,Sem Vítimas,Pleno dia,Céu Claro,0,0,2
+38,2025-10-11 19:10:00,PR,277,600.0,MUNICIPIO TESTE,Causa de teste,Tombamento,Com Vítimas Fatais,Pleno dia,Nublado,1,1,2
+39,2025-10-11 19:10:00,PR,277,600.3,MUNICIPIO TESTE,Causa de teste,Tombamento,Com Vítimas Feridas,Pleno dia,Chuva,0,1,2
+40,2025-10-11 07:10:00,PR,277,90.0,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Sem Vítimas,Pleno dia,Céu Claro,0,0,2
+41,2025-10-11 23:10:00,SP,50,40.0,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Com Vítimas Fatais,Pleno dia,Nublado,1,1,2
+42,2025-10-11 19:10:00,MG,50,40.0,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Com Vítimas Feridas,Pleno dia,Céu Claro,0,1,2
+43,2025-11-08 18:10:00,GO,50,40.0,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Com Vítimas Feridas,Pleno dia,,0,1,2
+44,2025-11-09 19:10:00,GO,60,150.0,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Com Vítimas Fatais,Pleno dia,Céu Claro,1,1,2
+45,2025-11-09 12:10:00,DF,60,150.0,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Sem Vítimas,Pleno dia,Chuva,0,0,2
+46,2025-12-14 19:10:00,MT,70,20.0,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Com Vítimas Fatais,Pleno dia,Chuva,3,1,2
+47,2025-12-14 19:10:00,MT,163,500.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Nublado,0,1,2
+48,2025-12-14 18:10:00,PB,230,10.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,,Pleno dia,Chuva,0,1,2
+49,2025-12-14 19:10:00,SP,,,MUNICIPIO TESTE,Causa de teste,Colisão transversal,Com Vítimas Fatais,Pleno dia,Céu Claro,1,1,2
+50,2025-12-14 07:10:00,SP,,,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Sem Vítimas,Pleno dia,,0,0,2
