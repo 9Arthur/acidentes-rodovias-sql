@@ -59,6 +59,6 @@ As escolhas de cada consulta estão no comentário do arquivo:
 - condição meteorológica: mortos por acidente, sem as linhas sem condição informada;
 - trecho: UF + BR + km inteiro, porque o mesmo par (BR, km) aparece em mais de uma UF.
 
-Empates de texto são desfeitos com `COLLATE "C"`, para que a ordem não dependa do idioma configurado no servidor.
+Nas consultas 4 e 5, o empate de texto é desfeito com `COLLATE "C"`, para que a ordem não dependa do idioma configurado no servidor.
 
 Por quê: um arquivo por pergunta deixa cada consulta legível e revisável sozinha. Comparar o resultado inteiro, e não só "devolve linhas", pega o erro de lógica (empate, nulo, arredondamento), que é onde consulta de análise erra sem dar erro.

@@ -23,7 +23,11 @@ T5 = "Atropelamento de Pedestre"
 
 @pytest.fixture(scope="module")
 def conn():
-    """Schema descartável com a tabela acidente e as 50 linhas da fixture."""
+    """Schema descartável com a tabela acidente e as 50 linhas da fixture.
+
+    Depois da carga a conexão fica em autocommit: um erro de SQL num teste não deixa a
+    transação abortada para os seguintes.
+    """
     from acidentes.banco import url_do_banco
     from acidentes.carregar import criar_tabela
 
@@ -37,6 +41,7 @@ def conn():
             with c.cursor().copy("COPY acidente FROM STDIN (FORMAT csv, HEADER)") as cp:
                 cp.write(FIXTURE.read_bytes())
             c.commit()
+            c.autocommit = True
             yield c
     finally:
         with psycopg.connect(url_do_banco(), autocommit=True) as c:

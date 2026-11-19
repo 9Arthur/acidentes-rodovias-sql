@@ -12,6 +12,9 @@ def ler(nome: str) -> str:
 
 
 def executar(conn: psycopg.Connection, nome: str) -> tuple[list[str], list[tuple]]:
-    """Roda sql/<nome>.sql e devolve os nomes das colunas e as linhas."""
+    """Roda sql/<nome>.sql e devolve os nomes das colunas e as linhas.
+
+    Não faz commit nem rollback: a transação é de quem abriu a conexão.
+    """
     cursor = conn.execute(ler(nome))
     return [coluna.name for coluna in cursor.description], cursor.fetchall()

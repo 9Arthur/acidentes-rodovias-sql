@@ -47,5 +47,5 @@ id,data_hora,uf,br,km,municipio,causa,tipo,classificacao,fase_dia,condicao_meteo
 46,2025-12-14 19:10:00,MT,70,20.0,MUNICIPIO TESTE,Causa de teste,Atropelamento de Pedestre,Com Vítimas Fatais,Pleno dia,Chuva,3,1,2
 47,2025-12-14 19:10:00,MT,163,500.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,Com Vítimas Feridas,Pleno dia,Nublado,0,1,2
 48,2025-12-14 18:10:00,PB,230,10.0,MUNICIPIO TESTE,Causa de teste,Colisão traseira,,Pleno dia,Chuva,0,1,2
-49,2025-12-14 19:10:00,SP,,,MUNICIPIO TESTE,Causa de teste,Colisão transversal,Com Vítimas Fatais,Pleno dia,Céu Claro,1,1,2
-50,2025-12-14 07:10:00,SP,,,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Sem Vítimas,Pleno dia,,0,0,2
+49,2025-12-14 19:10:00,AC,,,MUNICIPIO TESTE,Causa de teste,Colisão transversal,Com Vítimas Fatais,Pleno dia,Céu Claro,1,1,2
+50,2025-12-14 07:10:00,AC,,,MUNICIPIO TESTE,Causa de teste,Saída de leito carroçável,Sem Vítimas,Pleno dia,,0,0,2

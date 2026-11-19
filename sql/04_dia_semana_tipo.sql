@@ -2,6 +2,7 @@
 -- de cada um no total do dia. O dia sai de data_hora (ISODOW: 1 = segunda, 7 = domingo),
 -- porque o schema não guarda o dia da semana. Empate na contagem é desfeito pelo nome do
 -- tipo em ordem de bytes (COLLATE "C"), que não depende do idioma do servidor.
+-- Tipo nulo contaria como um tipo à parte (no arquivo de 2025 não há nenhum).
 WITH por_dia AS (
     SELECT
         extract(ISODOW FROM data_hora)::int AS isodow,
