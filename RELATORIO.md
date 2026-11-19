@@ -1,6 +1,6 @@
 # Relatório — acidentes nas rodovias federais (PRF, 2025)
 
-Gerado por `python -m acidentes.relatorio` a partir das consultas de `sql/`.
+Gerado na raiz do repositório por `uv run python -m acidentes.relatorio`.
 
 ## 1. Acidentes por mês e tendência
 
@@ -135,7 +135,7 @@ Consulta: `sql/06_trechos.sql`
 | SP | 116 | 225 | 57 |
 | RJ | 101 | 322 | 55 |
 
-## 7. MG × SC
+## 7. Comparação entre dois estados (MG × SC)
 
 Consulta: `sql/07_comparacao_ufs.sql`
 
@@ -620,9 +620,9 @@ Consulta: `sql/09_causas_por_uf.sql`
 
 Consulta: `sql/10_fase_dia.sql`
 
-| fase_dia | acidentes | mortos | mortos_por_100 | pct_com_fatais |
+| fase_dia | acidentes | mortos | mortos_por_acidente | pct_com_fatais |
 |---|---|---|---|---|
-| Amanhecer | 3447 | 472 | 13.7 | 11.2 |
-| Plena Noite | 24781 | 2892 | 11.7 | 10.2 |
-| Anoitecer | 3926 | 288 | 7.3 | 6.4 |
-| Pleno dia | 40375 | 2391 | 5.9 | 5.1 |
+| Amanhecer | 3447 | 472 | 0.1369 | 11.2 |
+| Plena Noite | 24781 | 2892 | 0.1167 | 10.2 |
+| Anoitecer | 3926 | 288 | 0.0734 | 6.4 |
+| Pleno dia | 40375 | 2391 | 0.0592 | 5.1 |
